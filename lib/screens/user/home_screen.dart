@@ -126,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       selectedCategoryName = null;
                       _loadEvents();
                     });
+
                     Navigator.pop(context);
                   },
                 ),
@@ -143,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         selectedCategoryName = category.categoryName;
                         _loadEvents();
                       });
+
                       Navigator.pop(context);
                     },
                   );
