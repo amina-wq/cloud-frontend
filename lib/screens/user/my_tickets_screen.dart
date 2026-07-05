@@ -19,7 +19,17 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadTickets();
+  }
+
+  void _loadTickets() {
     _ticketsFuture = _ticketService.getMyTickets();
+  }
+
+  void _refreshTickets() {
+    setState(() {
+      _loadTickets();
+    });
   }
 
   @override
@@ -45,12 +55,17 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
             return const Center(child: Text('No tickets found'));
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: tickets.length,
-            itemBuilder: (context, index) {
-              return TicketCard(ticket: tickets[index]);
+          return RefreshIndicator(
+            onRefresh: () async {
+              _refreshTickets();
             },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: tickets.length,
+              itemBuilder: (context, index) {
+                return TicketCard(ticket: tickets[index]);
+              },
+            ),
           );
         },
       ),

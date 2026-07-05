@@ -144,6 +144,7 @@ class MockData {
   static final List<Ticket> tickets = [
     Ticket(
       registrationID: 1,
+      userID: 1,
       registrationStatus: 'registered',
       qrCode: 'QR-AI-WORKSHOP-USER-1',
       event: events[0],

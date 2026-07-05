@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/check_in_result_model.dart';
 import '../../services/scanner_service.dart';
 import '../../utils/app_routes.dart';
 import '../../widgets/app_button.dart';
@@ -13,12 +14,13 @@ class ScannerScreen extends StatefulWidget {
 
 class _ScannerScreenState extends State<ScannerScreen> {
   final ScannerService _scannerService = ScannerService();
+
   final TextEditingController qrController = TextEditingController(
     text: 'QR-AI-WORKSHOP-USER-1',
   );
 
   bool isLoading = false;
-  Map<String, dynamic>? result;
+  CheckInResult? result;
 
   Future<void> _checkIn() async {
     if (qrController.text.trim().isEmpty) {
@@ -33,14 +35,32 @@ class _ScannerScreenState extends State<ScannerScreen> {
       result = null;
     });
 
-    final response = await _scannerService.checkInByQrCode(
-      qrController.text.trim(),
-    );
+    try {
+      final response = await _scannerService.checkInByQrCode(
+        qrController.text.trim(),
+      );
 
-    setState(() {
-      isLoading = false;
-      result = response;
-    });
+      if (!mounted) return;
+
+      setState(() {
+        result = response;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        result = CheckInResult(
+          success: false,
+          message: e.toString().replaceAll('Exception: ', ''),
+        );
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   void _logout() {
@@ -59,7 +79,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isSuccess = result?['success'] == true;
+    final isSuccess = result?.success == true;
 
     return Scaffold(
       appBar: AppBar(
@@ -108,6 +128,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 onPressed: _checkIn,
               ),
             ),
+
             const SizedBox(height: 24),
 
             if (result != null)
@@ -119,7 +140,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        result!['message'],
+                        result!.message,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -127,19 +148,29 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         ),
                       ),
 
-                      if (isSuccess) ...[
+                      if (result!.eventTitle != null) ...[
                         const SizedBox(height: 12),
-                        Text('Event: ${result!['eventTitle']}'),
-                        Text('Venue: ${result!['venue']}'),
-                        Text('User: ${result!['userName']}'),
-                        Text('School ID: ${result!['schoolID']}'),
+                        Text('Event: ${result!.eventTitle}'),
                       ],
+
+                      if (result!.venue != null)
+                        Text('Venue: ${result!.venue}'),
+
+                      if (result!.userName != null)
+                        Text('User: ${result!.userName}'),
+
+                      if (result!.studentID != null)
+                        Text('Student ID: ${result!.studentID}'),
+
+                      if (result!.attendanceStatus != null)
+                        Text('Attendance: ${result!.attendanceStatus}'),
                     ],
                   ),
                 ),
               ),
 
             const SizedBox(height: 20),
+
             const Text(
               'For testing, use: QR-AI-WORKSHOP-USER-1',
               style: TextStyle(color: Colors.grey),

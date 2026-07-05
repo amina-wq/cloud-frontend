@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../models/category_model.dart';
 import '../../models/event_model.dart';
+import '../../services/auth_service.dart';
 import '../../services/event_service.dart';
 import '../../utils/app_routes.dart';
 import '../../widgets/event_card.dart';
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final EventService _eventService = EventService();
+  final AuthService _authService = AuthService();
 
   late Future<List<Event>> _eventsFuture;
   late Future<List<EventCategory>> _categoriesFuture;
@@ -166,11 +168,20 @@ class _HomeScreenState extends State<HomeScreen> {
     if (selectedDateRange == null) return 'Date';
 
     final formatter = DateFormat('dd MMM');
+
     return '${formatter.format(selectedDateRange!.start)} - ${formatter.format(selectedDateRange!.end)}';
   }
 
-  void _logout() {
-    Navigator.pushReplacementNamed(context, AppRoutes.login);
+  Future<void> _logout() async {
+    await _authService.logout();
+
+    if (!mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.login,
+          (route) => false,
+    );
   }
 
   @override
@@ -181,12 +192,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Upcoming Events'),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.profile);
-            },
-            icon: const Icon(Icons.person),
-          ),
           IconButton(
             onPressed: _logout,
             icon: const Icon(Icons.logout),
@@ -291,14 +296,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       return EventCard(
                         event: event,
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
                                   EventDetailsScreen(eventID: event.eventID),
                             ),
                           );
+
+                          _refreshEvents();
                         },
                       );
                     },
@@ -306,36 +313,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, AppRoutes.eventRequests);
-          } else if (index == 2) {
-            Navigator.pushNamed(context, AppRoutes.myTickets);
-          } else if (index == 3) {
-            Navigator.pushNamed(context, AppRoutes.profile);
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add_box),
-            label: 'Requests',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.confirmation_number),
-            label: 'Tickets',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person),
-            label: 'Profile',
           ),
         ],
       ),

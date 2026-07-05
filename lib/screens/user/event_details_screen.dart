@@ -28,13 +28,31 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Future<void> _registerForEvent(Event event) async {
-    final message = await _eventService.registerForEvent(event.eventID);
+    try {
+      final ticket = await _eventService.registerForEvent(event.eventID);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Successfully registered. Ticket QR: ${ticket.qrCode}',
+          ),
+        ),
+      );
+
+      setState(() {
+        _eventFuture = _eventService.getEventDetails(widget.eventID);
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+        ),
+      );
+    }
   }
 
   @override

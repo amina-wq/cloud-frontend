@@ -70,10 +70,10 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
   }
 
   Future<void> _submitRequest() async {
-    if (titleController.text.isEmpty ||
-        descriptionController.text.isEmpty ||
-        venueController.text.isEmpty ||
-        capacityController.text.isEmpty ||
+    if (titleController.text.trim().isEmpty ||
+        descriptionController.text.trim().isEmpty ||
+        venueController.text.trim().isEmpty ||
+        capacityController.text.trim().isEmpty ||
         selectedCategory == null ||
         startDateTime == null ||
         endDateTime == null) {
@@ -83,31 +83,63 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
       return;
     }
 
+    final capacity = int.tryParse(capacityController.text.trim());
+
+    if (capacity == null || capacity <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Capacity must be greater than 0')),
+      );
+      return;
+    }
+
+    if (endDateTime!.isBefore(startDateTime!) ||
+        endDateTime!.isAtSameMomentAs(startDateTime!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('End date must be after start date')),
+      );
+      return;
+    }
+
     setState(() {
       isLoading = true;
     });
 
-    final message = await _requestService.createEventRequest(
-      eventTitle: titleController.text.trim(),
-      eventDescription: descriptionController.text.trim(),
-      venue: venueController.text.trim(),
-      categoryName: selectedCategory!.categoryName,
-      proposedStartDatetime: startDateTime!.toIso8601String(),
-      proposedEndDatetime: endDateTime!.toIso8601String(),
-      requestCapacity: int.tryParse(capacityController.text.trim()) ?? 0,
-    );
+    try {
+      await _requestService.createEventRequest(
+        eventTitle: titleController.text.trim(),
+        eventDescription: descriptionController.text.trim(),
+        venue: venueController.text.trim(),
+        categoryID: selectedCategory!.categoryID,
+        categoryName: selectedCategory!.categoryName,
+        proposedStartDatetime: startDateTime!.toIso8601String(),
+        proposedEndDatetime: endDateTime!.toIso8601String(),
+        requestCapacity: capacity,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      isLoading = false;
-    });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Event request submitted successfully'),
+        ),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
 
-    Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   @override

@@ -31,13 +31,48 @@ class EventRequest {
     required this.submittedByName,
   });
 
+  EventRequest copyWith({
+    int? requestID,
+    String? eventTitle,
+    String? eventDescription,
+    String? venue,
+    String? posterURL,
+    String? categoryName,
+    String? proposedStartDatetime,
+    String? proposedEndDatetime,
+    int? requestCapacity,
+    String? requestStatus,
+    String? submittedAt,
+    String? reviewedAt,
+    String? remark,
+    String? submittedByName,
+  }) {
+    return EventRequest(
+      requestID: requestID ?? this.requestID,
+      eventTitle: eventTitle ?? this.eventTitle,
+      eventDescription: eventDescription ?? this.eventDescription,
+      venue: venue ?? this.venue,
+      posterURL: posterURL ?? this.posterURL,
+      categoryName: categoryName ?? this.categoryName,
+      proposedStartDatetime:
+      proposedStartDatetime ?? this.proposedStartDatetime,
+      proposedEndDatetime: proposedEndDatetime ?? this.proposedEndDatetime,
+      requestCapacity: requestCapacity ?? this.requestCapacity,
+      requestStatus: requestStatus ?? this.requestStatus,
+      submittedAt: submittedAt ?? this.submittedAt,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      remark: remark ?? this.remark,
+      submittedByName: submittedByName ?? this.submittedByName,
+    );
+  }
+
   factory EventRequest.fromJson(Map<String, dynamic> json) {
     return EventRequest(
       requestID: json['requestID'],
       eventTitle: json['eventTitle'],
       eventDescription: json['eventDescription'],
       venue: json['venue'],
-      posterURL: json['posterURL'],
+      posterURL: json['posterURL'] ?? '',
       categoryName: json['categoryName'],
       proposedStartDatetime: json['proposedStartDatetime'],
       proposedEndDatetime: json['proposedEndDatetime'],

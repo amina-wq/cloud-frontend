@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
 import '../../utils/validators.dart';
 import '../../widgets/app_button.dart';
+import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,22 +20,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  void _register() {
+  final AuthService _authService = AuthService();
+  bool isLoading = false;
+
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final studentID = studentIDController.text.trim().toUpperCase();
+    setState(() {
+      isLoading = true;
+    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Account created for $studentID. Backend connection will be added later.',
+    try {
+      final studentID = studentIDController.text.trim().toUpperCase();
+
+      await _authService.register(
+        fullName: fullNameController.text.trim(),
+        studentID: studentID,
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created successfully. Please login.'),
         ),
-      ),
-    );
+      );
 
-    Navigator.pop(context);
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -135,6 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: AppButton(
                   text: 'Register',
                   icon: Icons.app_registration,
+                  isLoading: isLoading,
                   onPressed: _register,
                 ),
               ),

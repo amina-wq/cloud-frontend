@@ -29,6 +29,39 @@ class Event {
     required this.isRegisteredByCurrentUser,
   });
 
+  Event copyWith({
+    int? eventID,
+    String? title,
+    String? description,
+    String? venue,
+    String? posterURL,
+    String? startDatetime,
+    String? endDatetime,
+    int? capacity,
+    int? registeredCount,
+    int? availableSeats,
+    String? categoryName,
+    String? eventStatus,
+    bool? isRegisteredByCurrentUser,
+  }) {
+    return Event(
+      eventID: eventID ?? this.eventID,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      venue: venue ?? this.venue,
+      posterURL: posterURL ?? this.posterURL,
+      startDatetime: startDatetime ?? this.startDatetime,
+      endDatetime: endDatetime ?? this.endDatetime,
+      capacity: capacity ?? this.capacity,
+      registeredCount: registeredCount ?? this.registeredCount,
+      availableSeats: availableSeats ?? this.availableSeats,
+      categoryName: categoryName ?? this.categoryName,
+      eventStatus: eventStatus ?? this.eventStatus,
+      isRegisteredByCurrentUser:
+      isRegisteredByCurrentUser ?? this.isRegisteredByCurrentUser,
+    );
+  }
+
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       eventID: json['eventID'],

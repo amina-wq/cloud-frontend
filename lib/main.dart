@@ -9,6 +9,7 @@ import 'screens/user/event_requests_screen.dart';
 import 'screens/user/home_screen.dart';
 import 'screens/user/my_tickets_screen.dart';
 import 'screens/user/profile_screen.dart';
+import 'screens/user/main_user_screen.dart';
 import 'utils/app_routes.dart';
 import 'utils/constants.dart';
 
@@ -33,12 +34,15 @@ class EventManagerApp extends StatelessWidget {
       routes: {
         AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.register: (context) => const RegisterScreen(),
+
+        AppRoutes.mainUser: (context) => const MainUserScreen(),
+
         AppRoutes.home: (context) => const HomeScreen(),
         AppRoutes.profile: (context) => const ProfileScreen(),
         AppRoutes.myTickets: (context) => const MyTicketsScreen(),
         AppRoutes.eventRequests: (context) => const EventRequestsScreen(),
-        AppRoutes.createEventRequest: (context) =>
-        const CreateEventRequestScreen(),
+        AppRoutes.createEventRequest: (context) => const CreateEventRequestScreen(),
+
         AppRoutes.adminRequests: (context) => const AdminRequestsScreen(),
         AppRoutes.scanner: (context) => const ScannerScreen(),
       },

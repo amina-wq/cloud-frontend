@@ -37,17 +37,27 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
   }
 
   Future<void> _approveRequest(int requestID) async {
-    final message = await _requestService.approveRequest(requestID);
+    try {
+      await _requestService.approveRequest(requestID);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request approved successfully')),
+      );
 
-    setState(() {
-      _loadRequests();
-    });
+      setState(() {
+        _loadRequests();
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+        ),
+      );
+    }
   }
 
   Future<void> _rejectRequest(int requestID) async {
@@ -84,17 +94,27 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
 
     if (remark == null || remark.isEmpty) return;
 
-    final message = await _requestService.rejectRequest(requestID, remark);
+    try {
+      await _requestService.rejectRequest(requestID, remark);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request rejected successfully')),
+      );
 
-    setState(() {
-      _loadRequests();
-    });
+      setState(() {
+        _loadRequests();
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+        ),
+      );
+    }
   }
 
   void _logout() {
