@@ -55,6 +55,44 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
+  Widget _buildPoster(Event event) {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.blue.shade100,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: event.posterURL.isEmpty
+          ? const Icon(
+        Icons.event,
+        size: 70,
+        color: Colors.blue,
+      )
+          : Image.network(
+        event.posterURL,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) {
+            return child;
+          }
+
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.event,
+            size: 70,
+            color: Colors.blue,
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Event>(
@@ -81,21 +119,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 180,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Icon(
-                        Icons.event,
-                        size: 70,
-                        color: Colors.blue,
-                      ),
-                    ),
+                    _buildPoster(event),
                     const SizedBox(height: 20),
-
                     Text(
                       event.title,
                       style: const TextStyle(
@@ -104,7 +129,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-
                     Text(
                       event.categoryName,
                       style: TextStyle(
@@ -113,10 +137,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     Text(event.description),
                     const SizedBox(height: 20),
-
                     _InfoRow(
                       icon: Icons.location_on,
                       text: event.venue,
@@ -131,7 +153,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       '${event.registeredCount} registered • ${event.availableSeats} seats left',
                     ),
                     const SizedBox(height: 24),
-
                     SizedBox(
                       width: double.infinity,
                       child: AppButton(

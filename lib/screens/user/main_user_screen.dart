@@ -15,20 +15,25 @@ class MainUserScreen extends StatefulWidget {
 class _MainUserScreenState extends State<MainUserScreen> {
   int selectedIndex = 0;
 
-  final List<Widget> pages = const [
-    HomeScreen(),
-    EventRequestsScreen(),
-    MyTicketsScreen(),
-    ProfileScreen(),
-  ];
+  Widget _buildCurrentPage() {
+    switch (selectedIndex) {
+      case 0:
+        return const HomeScreen();
+      case 1:
+        return const EventRequestsScreen();
+      case 2:
+        return const MyTicketsScreen();
+      case 3:
+        return const ProfileScreen();
+      default:
+        return const HomeScreen();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: selectedIndex,
-        children: pages,
-      ),
+      body: _buildCurrentPage(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {

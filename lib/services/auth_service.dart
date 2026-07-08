@@ -2,7 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_model.dart';
 import '../utils/constants.dart';
-import '../utils/mock_data.dart';
 import 'api_service.dart';
 
 class AuthService {
@@ -14,10 +13,6 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    if (AppConstants.useMockData) {
-      return _loginWithMockData(email: email, password: password);
-    }
-
     final data = await ApiService.post(
       '/auth/login',
       {
@@ -44,15 +39,6 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    if (AppConstants.useMockData) {
-      return _registerWithMockData(
-        fullName: fullName,
-        studentID: studentID,
-        email: email,
-        password: password,
-      );
-    }
-
     final data = await ApiService.post(
       '/auth/register',
       {
@@ -71,67 +57,19 @@ class AuthService {
     return AppUser.fromJson(data);
   }
 
-  Future<AppUser> _loginWithMockData({
-    required String email,
-    required String password,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  Future<AppUser?> getCurrentUser() async {
+    final token = await getToken();
 
-    if (password != '123456') {
-      throw Exception('Invalid password');
+    if (token == null) {
+      return null;
     }
 
-    final user = MockData.users.firstWhere(
-          (user) => user.email.toLowerCase() == email.toLowerCase(),
-      orElse: () => throw Exception('User not found'),
+    final data = await ApiService.get(
+      '/users/me',
+      token: token,
     );
 
-    await _saveSession(
-      token: 'mock-jwt-token-${user.role}',
-      userID: user.userID,
-      role: user.role,
-    );
-
-    return user;
-  }
-
-  Future<AppUser> _registerWithMockData({
-    required String fullName,
-    required String studentID,
-    required String email,
-    required String password,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    final emailExists = MockData.users.any(
-          (user) => user.email.toLowerCase() == email.toLowerCase(),
-    );
-
-    if (emailExists) {
-      throw Exception('Email already exists');
-    }
-
-    final studentIDExists = MockData.users.any(
-          (user) => user.schoolID.toUpperCase() == studentID.toUpperCase(),
-    );
-
-    if (studentIDExists) {
-      throw Exception('Student ID already exists');
-    }
-
-    final newUser = AppUser(
-      userID: MockData.users.length + 1,
-      fullName: fullName,
-      schoolID: studentID.toUpperCase(),
-      email: email,
-      organisation: AppConstants.universityName,
-      role: 'User',
-      accountStatus: 'active',
-    );
-
-    MockData.users.add(newUser);
-
-    return newUser;
+    return AppUser.fromJson(data);
   }
 
   Future<void> _saveSession({
