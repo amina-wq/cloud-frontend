@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../utils/app_routes.dart';
-import '../../utils/mock_data.dart';
 import '../../widgets/app_button.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -21,25 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _userFuture = _getCurrentUser();
-  }
-
-  Future<AppUser?> _getCurrentUser() async {
-    final currentUserID = await _authService.getCurrentUserID();
-
-    if (currentUserID == null) {
-      return null;
-    }
-
-    final userIndex = MockData.users.indexWhere(
-          (user) => user.userID == currentUserID,
-    );
-
-    if (userIndex == -1) {
-      return null;
-    }
-
-    return MockData.users[userIndex];
+    _userFuture = _authService.getCurrentUser();
   }
 
   Future<void> _logout() async {
@@ -69,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           final user = snapshot.data;
 
-          if (user == null) {
+          if (snapshot.hasError || user == null) {
             return const Center(
               child: Text('User profile not found'),
             );
@@ -84,7 +65,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Icon(Icons.person, size: 48),
                 ),
                 const SizedBox(height: 16),
-
                 Text(
                   user.fullName,
                   textAlign: TextAlign.center,
@@ -93,11 +73,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 4),
                 Text(user.email),
                 const SizedBox(height: 24),
-
                 _ProfileInfoTile(
                   icon: Icons.badge,
                   title: 'Student ID',
@@ -118,9 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   title: 'Account Status',
                   value: user.accountStatus,
                 ),
-
                 const SizedBox(height: 24),
-
                 SizedBox(
                   width: double.infinity,
                   child: AppButton(
