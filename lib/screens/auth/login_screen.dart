@@ -16,10 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final TextEditingController emailController =
-  TextEditingController(text: 'user@mail.com');
-  final TextEditingController passwordController =
-  TextEditingController(text: '123456');
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   bool isLoading = false;
 
@@ -51,7 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+        ),
       );
     } finally {
       if (mounted) {
@@ -60,13 +60,6 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
-  }
-
-  void _fillTestAccount(String email) {
-    setState(() {
-      emailController.text = email;
-      passwordController.text = '123456';
-    });
   }
 
   @override
@@ -109,7 +102,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
-
                   TextFormField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -121,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: Validators.validateEmail,
                   ),
                   const SizedBox(height: 16),
-
                   TextFormField(
                     controller: passwordController,
                     obscureText: true,
@@ -133,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: Validators.validatePassword,
                   ),
                   const SizedBox(height: 24),
-
                   AppButton(
                     text: 'Login',
                     icon: Icons.login,
@@ -141,7 +131,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _login,
                   ),
                   const SizedBox(height: 16),
-
                   TextButton(
                     onPressed: isLoading
                         ? null
@@ -149,44 +138,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.pushNamed(context, AppRoutes.register);
                     },
                     child: const Text('Create new account'),
-                  ),
-
-                  const SizedBox(height: 24),
-                  const Divider(),
-                  const SizedBox(height: 12),
-
-                  const Text(
-                    'Test accounts',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      ActionChip(
-                        label: const Text('User'),
-                        onPressed: () => _fillTestAccount('user@mail.com'),
-                      ),
-                      ActionChip(
-                        label: const Text('Admin'),
-                        onPressed: () => _fillTestAccount('admin@mail.com'),
-                      ),
-                      ActionChip(
-                        label: const Text('Scanner'),
-                        onPressed: () => _fillTestAccount('scanner@mail.com'),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Password for all test accounts: 123456',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ],
               ),

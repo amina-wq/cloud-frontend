@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/check_in_result_model.dart';
+import '../../services/auth_service.dart';
 import '../../services/scanner_service.dart';
 import '../../utils/app_routes.dart';
 import '../../widgets/app_button.dart';
@@ -13,11 +14,10 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
+  final AuthService _authService = AuthService();
   final ScannerService _scannerService = ScannerService();
 
-  final TextEditingController qrController = TextEditingController(
-    text: 'QR-AI-WORKSHOP-USER-1',
-  );
+  final TextEditingController qrController = TextEditingController();
 
   bool isLoading = false;
   CheckInResult? result;
@@ -63,7 +63,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
     }
   }
 
-  void _logout() {
+  Future<void> _logout() async {
+    await _authService.logout();
+
+    if (!mounted) return;
+
     Navigator.pushNamedAndRemoveUntil(
       context,
       AppRoutes.login,
@@ -101,14 +105,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
               color: Colors.blue,
             ),
             const SizedBox(height: 20),
-
             const Text(
               'Scan user QR code to mark attendance',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 24),
-
             TextField(
               controller: qrController,
               decoration: const InputDecoration(
@@ -118,7 +120,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             SizedBox(
               width: double.infinity,
               child: AppButton(
@@ -128,9 +129,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 onPressed: _checkIn,
               ),
             ),
-
             const SizedBox(height: 24),
-
             if (result != null)
               Card(
                 color: isSuccess ? Colors.green.shade50 : Colors.red.shade50,
@@ -147,34 +146,21 @@ class _ScannerScreenState extends State<ScannerScreen> {
                           color: isSuccess ? Colors.green : Colors.red,
                         ),
                       ),
-
                       if (result!.eventTitle != null) ...[
                         const SizedBox(height: 12),
                         Text('Event: ${result!.eventTitle}'),
                       ],
-
-                      if (result!.venue != null)
-                        Text('Venue: ${result!.venue}'),
-
+                      if (result!.venue != null) Text('Venue: ${result!.venue}'),
                       if (result!.userName != null)
                         Text('User: ${result!.userName}'),
-
                       if (result!.studentID != null)
                         Text('Student ID: ${result!.studentID}'),
-
                       if (result!.attendanceStatus != null)
                         Text('Attendance: ${result!.attendanceStatus}'),
                     ],
                   ),
                 ),
               ),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              'For testing, use: QR-AI-WORKSHOP-USER-1',
-              style: TextStyle(color: Colors.grey),
-            ),
           ],
         ),
       ),
