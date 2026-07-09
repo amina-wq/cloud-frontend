@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../models/category_model.dart';
 import '../../services/event_request_service.dart';
@@ -16,6 +19,7 @@ class CreateEventRequestScreen extends StatefulWidget {
 class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
   final EventService _eventService = EventService();
   final EventRequestService _requestService = EventRequestService();
+  final ImagePicker _imagePicker = ImagePicker();
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -25,6 +29,9 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
   DateTime? startDateTime;
   DateTime? endDateTime;
   EventCategory? selectedCategory;
+
+  XFile? selectedPoster;
+  Uint8List? selectedPosterBytes;
 
   bool isLoading = false;
   late Future<List<EventCategory>> _categoriesFuture;
@@ -69,6 +76,30 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
     });
   }
 
+  Future<void> _pickPoster() async {
+    final pickedPoster = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1600,
+    );
+
+    if (pickedPoster == null) return;
+
+    final bytes = await pickedPoster.readAsBytes();
+
+    setState(() {
+      selectedPoster = pickedPoster;
+      selectedPosterBytes = bytes;
+    });
+  }
+
+  void _removePoster() {
+    setState(() {
+      selectedPoster = null;
+      selectedPosterBytes = null;
+    });
+  }
+
   Future<void> _submitRequest() async {
     if (titleController.text.trim().isEmpty ||
         descriptionController.text.trim().isEmpty ||
@@ -76,9 +107,12 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
         capacityController.text.trim().isEmpty ||
         selectedCategory == null ||
         startDateTime == null ||
-        endDateTime == null) {
+        endDateTime == null ||
+        selectedPoster == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
+        const SnackBar(
+          content: Text('Please fill in all fields and upload a poster'),
+        ),
       );
       return;
     }
@@ -114,6 +148,7 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
         proposedStartDatetime: startDateTime!.toIso8601String(),
         proposedEndDatetime: endDateTime!.toIso8601String(),
         requestCapacity: capacity,
+        posterFile: selectedPoster!,
       );
 
       if (!mounted) return;
@@ -140,6 +175,50 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
         });
       }
     }
+  }
+
+  Widget _buildPosterPicker() {
+    if (selectedPosterBytes == null || selectedPoster == null) {
+      return OutlinedButton.icon(
+        onPressed: isLoading ? null : _pickPoster,
+        icon: const Icon(Icons.image),
+        label: const Text('Upload Poster'),
+      );
+    }
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Image.memory(
+            selectedPosterBytes!,
+            height: 180,
+            fit: BoxFit.cover,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                const Icon(Icons.image, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    selectedPoster!.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: isLoading ? null : _removePoster,
+                  icon: const Icon(Icons.close),
+                  label: const Text('Remove'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -169,7 +248,6 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             TextField(
               controller: descriptionController,
               maxLines: 4,
@@ -179,7 +257,6 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             TextField(
               controller: venueController,
               decoration: const InputDecoration(
@@ -188,7 +265,6 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             FutureBuilder<List<EventCategory>>(
               future: _categoriesFuture,
               builder: (context, snapshot) {
@@ -201,12 +277,14 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
                     border: OutlineInputBorder(),
                   ),
                   items: categories.map((category) {
-                    return DropdownMenuItem(
+                    return DropdownMenuItem<EventCategory>(
                       value: category,
                       child: Text(category.categoryName),
                     );
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: isLoading
+                      ? null
+                      : (value) {
                     setState(() {
                       selectedCategory = value;
                     });
@@ -215,7 +293,6 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
               },
             ),
             const SizedBox(height: 16),
-
             TextField(
               controller: capacityController,
               keyboardType: TextInputType.number,
@@ -225,12 +302,12 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _pickDateTime(isStart: true),
+                    onPressed:
+                    isLoading ? null : () => _pickDateTime(isStart: true),
                     icon: const Icon(Icons.calendar_month),
                     label: Text(
                       startDateTime == null
@@ -242,12 +319,12 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
               ],
             ),
             const SizedBox(height: 12),
-
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _pickDateTime(isStart: false),
+                    onPressed:
+                    isLoading ? null : () => _pickDateTime(isStart: false),
                     icon: const Icon(Icons.schedule),
                     label: Text(
                       endDateTime == null
@@ -259,20 +336,8 @@ class _CreateEventRequestScreenState extends State<CreateEventRequestScreen> {
               ],
             ),
             const SizedBox(height: 16),
-
-            OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Poster upload will be connected later'),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.image),
-              label: const Text('Upload Poster'),
-            ),
+            _buildPosterPicker(),
             const SizedBox(height: 24),
-
             SizedBox(
               width: double.infinity,
               child: AppButton(

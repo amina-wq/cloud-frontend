@@ -1,3 +1,5 @@
+import 'package:image_picker/image_picker.dart';
+
 import '../models/event_request_model.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
@@ -44,20 +46,25 @@ class EventRequestService {
     required String proposedStartDatetime,
     required String proposedEndDatetime,
     required int requestCapacity,
+    required XFile posterFile,
   }) async {
     final token = await _authService.getToken();
+    final posterBytes = await posterFile.readAsBytes();
 
-    final data = await ApiService.post(
-      '/event-requests',
-      {
-        'eventTitle': eventTitle,
-        'eventDescription': eventDescription,
-        'venue': venue,
-        'categoryID': categoryID,
-        'proposedStartDatetime': proposedStartDatetime,
-        'proposedEndDatetime': proposedEndDatetime,
-        'requestCapacity': requestCapacity,
+    final data = await ApiService.postMultipart(
+      '/event-requests/with-poster',
+      fields: {
+        'EventTitle': eventTitle,
+        'EventDescription': eventDescription,
+        'Venue': venue,
+        'CategoryID': categoryID.toString(),
+        'ProposedStartDatetime': proposedStartDatetime,
+        'ProposedEndDatetime': proposedEndDatetime,
+        'RequestCapacity': requestCapacity.toString(),
       },
+      fileFieldName: 'PosterFile',
+      fileBytes: posterBytes,
+      fileName: posterFile.name,
       token: token,
     );
 

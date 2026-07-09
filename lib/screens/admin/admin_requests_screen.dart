@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/event_request_model.dart';
+import '../../services/auth_service.dart';
 import '../../services/event_request_service.dart';
 import '../../utils/app_routes.dart';
 import '../../widgets/request_card.dart';
@@ -14,6 +15,7 @@ class AdminRequestsScreen extends StatefulWidget {
 }
 
 class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
+  final AuthService _authService = AuthService();
   final EventRequestService _requestService = EventRequestService();
 
   String selectedStatus = 'all';
@@ -92,6 +94,8 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
       },
     );
 
+    remarkController.dispose();
+
     if (remark == null || remark.isEmpty) return;
 
     try {
@@ -117,7 +121,11 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
     }
   }
 
-  void _logout() {
+  Future<void> _logout() async {
+    await _authService.logout();
+
+    if (!mounted) return;
+
     Navigator.pushNamedAndRemoveUntil(
       context,
       AppRoutes.login,
@@ -159,7 +167,6 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
               },
             ),
           ),
-
           Expanded(
             child: FutureBuilder<List<EventRequest>>(
               future: _requestsFuture,
