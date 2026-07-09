@@ -55,40 +55,98 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Widget _buildPoster(Event event) {
-    return Container(
-      height: 180,
-      width: double.infinity,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Colors.blue.shade100,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: event.posterURL.isEmpty
-          ? const Icon(
-        Icons.event,
-        size: 70,
-        color: Colors.blue,
-      )
-          : Image.network(
-        event.posterURL,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) {
-            return child;
-          }
+  void _openFullPoster(Event event) {
+    if (event.posterURL.isEmpty) {
+      return;
+    }
 
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return const Icon(
-            Icons.event,
-            size: 70,
-            color: Colors.blue,
-          );
-        },
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog.fullscreen(
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(event.title),
+              actions: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            body: InteractiveViewer(
+              minScale: 0.8,
+              maxScale: 4,
+              child: Center(
+                child: Image.network(
+                  event.posterURL,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Text('Poster could not be loaded');
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPoster(Event event) {
+    if (event.posterURL.isEmpty) {
+      return Container(
+        height: 260,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.blue.shade100,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: const Icon(
+          Icons.event,
+          size: 70,
+          color: Colors.blue,
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: () => _openFullPoster(event),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(
+          minHeight: 320,
+          maxHeight: 720,
+        ),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Image.network(
+          event.posterURL,
+          fit: BoxFit.contain,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(
+                Icons.event,
+                size: 70,
+                color: Colors.blue,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -120,6 +178,18 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildPoster(event),
+                    if (event.posterURL.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      const Center(
+                        child: Text(
+                          'Tap poster to view full screen',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     Text(
                       event.title,

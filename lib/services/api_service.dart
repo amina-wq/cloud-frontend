@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../utils/constants.dart';
 
@@ -10,7 +11,7 @@ class ApiService {
   static Future<dynamic> get(String endpoint, {String? token}) async {
     final response = await http.get(
       Uri.parse('$baseUrl$endpoint'),
-      headers: _headers(token),
+      headers: _jsonHeaders(token),
     );
 
     return _handleResponse(response);
@@ -23,7 +24,7 @@ class ApiService {
       }) async {
     final response = await http.post(
       Uri.parse('$baseUrl$endpoint'),
-      headers: _headers(token),
+      headers: _jsonHeaders(token),
       body: jsonEncode(body),
     );
 
@@ -37,14 +38,45 @@ class ApiService {
       }) async {
     final response = await http.put(
       Uri.parse('$baseUrl$endpoint'),
-      headers: _headers(token),
+      headers: _jsonHeaders(token),
       body: jsonEncode(body),
     );
 
     return _handleResponse(response);
   }
 
-  static Map<String, String> _headers(String? token) {
+  static Future<dynamic> postMultipart(
+      String endpoint, {
+        required Map<String, String> fields,
+        required String fileFieldName,
+        required List<int> fileBytes,
+        required String fileName,
+        String? token,
+      }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl$endpoint'),
+    );
+
+    request.headers.addAll(_authHeaders(token));
+    request.fields.addAll(fields);
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        fileFieldName,
+        fileBytes,
+        filename: fileName,
+        contentType: _getImageMediaType(fileName),
+      ),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    return _handleResponse(response);
+  }
+
+  static Map<String, String> _jsonHeaders(String? token) {
     final headers = <String, String>{
       'Content-Type': 'application/json',
     };
@@ -54,6 +86,30 @@ class ApiService {
     }
 
     return headers;
+  }
+
+  static Map<String, String> _authHeaders(String? token) {
+    final headers = <String, String>{};
+
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return headers;
+  }
+
+  static MediaType _getImageMediaType(String fileName) {
+    final lowerFileName = fileName.toLowerCase();
+
+    if (lowerFileName.endsWith('.png')) {
+      return MediaType('image', 'png');
+    }
+
+    if (lowerFileName.endsWith('.webp')) {
+      return MediaType('image', 'webp');
+    }
+
+    return MediaType('image', 'jpeg');
   }
 
   static dynamic _handleResponse(http.Response response) {
@@ -81,7 +137,8 @@ class ApiService {
       }
 
       if (decoded is Map<String, dynamic>) {
-        final message = decoded['message'] ?? decoded['title'] ?? decoded['error'];
+        final message =
+            decoded['message'] ?? decoded['title'] ?? decoded['error'];
 
         if (message != null && message.toString().trim().isNotEmpty) {
           return message.toString();
